@@ -2,74 +2,92 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Dino Evolution — AI Summon Runner</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="app">
-    <header class="hud">
-      <div class="hud-left">
-        <span class="hud-label">DIST</span>
-        <span id="score">0</span><span class="unit">m</span>
+    <!-- ===== Top navbar with all options ===== -->
+    <nav class="navbar">
+      <div class="nav-brand">
+        <span class="logo">🦖</span>
+        <span class="brand-text">DINO<b>EVOLUTION</b></span>
       </div>
-      <div class="hud-center">
-        <span class="hud-label">STAGE</span>
-        <span id="stage">Egg</span>
-      </div>
-      <div class="hud-right">
-        <span class="hud-label">HI</span>
-        <span id="hiscore">0</span><span class="unit">m</span>
-      </div>
-    </header>
 
+      <div class="nav-stats">
+        <div class="stat"><span class="stat-label">DIST</span><span id="score">0</span><i>m</i></div>
+        <div class="stat stat-stage"><span class="stat-label">STAGE</span><span id="stage">Egg</span></div>
+        <div class="stat"><span class="stat-label">BEST</span><span id="hiscore">0</span><i>m</i></div>
+      </div>
+
+      <div class="nav-summon">
+        <span class="prompt">✦</span>
+        <input id="summonText" type="text" autocomplete="off" spellcheck="false"
+               placeholder="summon anything — meteors, spaceship, hunter…" />
+        <button id="summonBtn" class="btn btn-accent">SUMMON</button>
+      </div>
+
+      <div class="nav-actions">
+        <div class="dropdown">
+          <button class="btn btn-ghost" id="quickToggle">Quick ▾</button>
+          <div class="dropdown-menu" id="quickMenu">
+            <button data-summon="meteor shower">☄️ Meteor shower</button>
+            <button data-summon="alien spaceship">🛸 Alien spaceship</button>
+            <button data-summon="hunter">🏹 Hunter</button>
+            <button data-summon="lightning storm">⚡ Lightning</button>
+            <button data-summon="bird swarm">🦅 Bird swarm</button>
+            <button data-summon="boulder">🪨 Boulder</button>
+          </div>
+        </div>
+
+        <label class="toggle" title="Auto-rain random hazards">
+          <input type="checkbox" id="autoToggle" />
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          <span class="toggle-label">AUTO</span>
+        </label>
+
+        <div class="dropdown">
+          <button class="btn btn-ghost" id="aiToggle">⚙️ AI</button>
+          <div class="dropdown-menu dropdown-wide" id="aiMenu">
+            <p class="menu-note">Summons use a built-in offline engine by default — no key needed.
+               Paste an Anthropic key to let Claude invent hazards. Kept in this tab only.</p>
+            <input id="apiKey" type="password" placeholder="sk-ant-… (optional)" autocomplete="off" />
+          </div>
+        </div>
+
+        <button class="btn btn-ghost" id="fullscreenBtn" title="Fullscreen">⛶</button>
+      </div>
+    </nav>
+
+    <!-- ===== Game stage ===== -->
     <div class="canvas-wrap">
-      <canvas id="game" width="900" height="320"></canvas>
+      <canvas id="game"></canvas>
+
+      <p id="aiLog" class="ai-log">Tell the AI what to conjure…</p>
 
       <div id="overlay" class="overlay">
-        <h1>🦖 DINO EVOLUTION</h1>
-        <p class="tagline">Run. Evolve. Survive whatever the AI throws at you.</p>
-        <ul class="controls">
-          <li><b>Space</b> / <b>↑</b> — Jump (double-jump unlocks as you evolve)</li>
-          <li><b>↓</b> — Duck</li>
-          <li><b>Type below</b> + Enter — Summon ANYTHING on the dino</li>
-        </ul>
-        <button id="startBtn">START</button>
+        <div class="overlay-card">
+          <h1>🦖 DINO EVOLUTION</h1>
+          <p class="tagline">Run. Evolve. Survive whatever the AI throws at you.</p>
+          <ul class="controls">
+            <li><b>Space</b> / <b>↑</b> / tap — Jump (double-jump unlocks as you evolve)</li>
+            <li><b>↓</b> — Duck &nbsp;•&nbsp; <b>hold jump</b> — Glide (when winged)</li>
+            <li>Type in the navbar to <b>summon anything</b>, or flip <b>AUTO</b> on</li>
+          </ul>
+          <button id="startBtn" class="btn btn-big">START RUN</button>
+        </div>
       </div>
 
       <div id="gameover" class="overlay hidden">
-        <h1>GAME OVER</h1>
-        <p class="tagline">You reached <span id="finalScore">0</span>m as a <span id="finalStage">Egg</span>.</p>
-        <p id="newHi" class="hidden newhi">🏆 NEW RECORD!</p>
-        <button id="restartBtn">RUN AGAIN</button>
+        <div class="overlay-card">
+          <h1>GAME OVER</h1>
+          <p class="tagline">You reached <span id="finalScore">0</span>m as a <span id="finalStage">Egg</span>.</p>
+          <p id="newHi" class="hidden newhi">🏆 NEW RECORD!</p>
+          <button id="restartBtn" class="btn btn-big">RUN AGAIN</button>
+        </div>
       </div>
     </div>
-
-    <div class="summon-bar">
-      <div class="summon-input">
-        <span class="prompt">✦ summon&gt;</span>
-        <input id="summonText" type="text" autocomplete="off" spellcheck="false"
-               placeholder="meteor shower, alien spaceship, hunter, lightning, boulder, bird swarm..." />
-        <button id="summonBtn">SUMMON</button>
-      </div>
-      <div class="quick-summons">
-        <button data-summon="meteor shower">☄️ Meteors</button>
-        <button data-summon="alien spaceship">🛸 Spaceship</button>
-        <button data-summon="hunter">🏹 Hunter</button>
-        <button data-summon="lightning storm">⚡ Lightning</button>
-        <button data-summon="bird swarm">🦅 Birds</button>
-        <button data-summon="boulder">🪨 Boulder</button>
-      </div>
-      <p id="aiLog" class="ai-log">AI is idle. Tell it what to conjure.</p>
-    </div>
-
-    <details class="ai-config">
-      <summary>⚙️ Connect real Claude AI (optional)</summary>
-      <p>By default, summons are interpreted by a built-in offline engine — no key needed.
-         To let Claude freely invent hazards from your text, paste an Anthropic API key.
-         It is kept only in this browser tab's memory and never stored.</p>
-      <input id="apiKey" type="password" placeholder="sk-ant-... (optional)" autocomplete="off" />
-    </details>
   </div>
 
   <script src="game.js"></script>
